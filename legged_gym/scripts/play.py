@@ -213,9 +213,13 @@ def play(args):
 
         if RECORD_FRAMES:
             if i % 2:
-                filename = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name, 'exported', 'frames', f"{img_idx}.png")
+                # 确保保存图像的目录路径存在
+                frames_dir = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name, 'exported', 'frames')
+                os.makedirs(frames_dir, exist_ok=True)
+
+                filename = os.path.join(frames_dir, f"{img_idx}.png")
                 env.gym.write_viewer_image_to_file(env.viewer, filename)
-                img_idx += 1 
+                img_idx += 1
         if MOVE_CAMERA:
             lootat = env.root_states[8, :3]
             camara_position = lootat.detach().cpu().numpy() + [0, 1, 0]
