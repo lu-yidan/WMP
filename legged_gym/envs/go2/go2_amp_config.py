@@ -316,7 +316,7 @@ class GO2AMPCfgPPO(LeggedRobotCfgPPO):
     class runner(LeggedRobotCfgPPO.runner):
         run_name = 'flat_push1'
         # experiment_name = 'go2_amp_example'
-        experiment_name = 'a1_amp_example'
+        experiment_name = 'go2_amp_example'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
         max_iterations = 20000  # number of policy updates
