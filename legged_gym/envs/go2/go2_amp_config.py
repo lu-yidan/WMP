@@ -144,7 +144,7 @@ class GO2AMPCfg(LeggedRobotCfg):
         camera_terrain_num_cols = 20
 
         position = [0.33, 0, 0.10]  # front camera
-        y_angle = [0, 10]  # positive pitch down; a1 is [-5, 5]
+        y_angle = [-5, 5]  # positive pitch down; a1 is [-5, 5]
         z_angle = [0, 0]
         x_angle = [0, 0]
 
