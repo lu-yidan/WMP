@@ -1236,9 +1236,9 @@ class LeggedRobot(BaseTask):
             self.cfg.depth.camera_num_envs = min(self.cfg.depth.camera_num_envs, self.num_envs)
             self.depth_index_without_crawl_tilt = np.random.choice(range(self.tilt_start_idx), self.cfg.depth.camera_num_envs
                                                              - (self.crawl_end_idx - self.tilt_start_idx), replace=False)
-            self.depth_index_without_crawl_tilt = np.sort(self.depth_index_without_crawl_tilt).astype(np.int)
-            self.depth_index = np.concatenate((self.depth_index_without_crawl_tilt, range(self.tilt_start_idx, self.crawl_end_idx))).astype(np.int)
-            self.depth_index_inverse = -np.ones(self.num_envs, dtype=np.int)
+            self.depth_index_without_crawl_tilt = np.sort(self.depth_index_without_crawl_tilt).astype(np.int64)
+            self.depth_index = np.concatenate((self.depth_index_without_crawl_tilt, range(self.tilt_start_idx, self.crawl_end_idx))).astype(np.int64)
+            self.depth_index_inverse = -np.ones(self.num_envs, dtype=np.int64)
             for i in range(len(self.depth_index)):
                 self.depth_index_inverse[self.depth_index[i]] = i
 
