@@ -28,6 +28,8 @@ python legged_gym/scripts/train.py --task=a1_amp --headless --sim_device=cuda:0
 ```
 Training takes about 23G GPU memory, and at least 10k iterations recommended.
 
+GO2 (`lyd_dev`): `--task=go2_amp`. AutoDL 环境要点见 [docs/autodl_setup.md](docs/autodl_setup.md)。
+
 ## Visualization
 **Please make sure you have trained the WMP before**
 ```
