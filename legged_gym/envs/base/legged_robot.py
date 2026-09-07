@@ -578,6 +578,21 @@ class LeggedRobot(BaseTask):
         Returns:
             [numpy.array]: Modified DOF properties
         """
+        dof_damping = getattr(self.cfg.asset, "dof_damping", None)
+        dof_friction = getattr(self.cfg.asset, "dof_friction", None)
+        dof_armature = getattr(self.cfg.asset, "dof_armature", None)
+        dof_effort = getattr(self.cfg.asset, "dof_effort", {})
+        if dof_damping is not None:
+            props["damping"].fill(float(dof_damping))
+        if dof_friction is not None:
+            props["friction"].fill(float(dof_friction))
+        if dof_armature is not None:
+            props["armature"].fill(float(dof_armature))
+        for name_fragment, effort in dof_effort.items():
+            for dof_index, dof_name in enumerate(self.dof_names):
+                if name_fragment in dof_name:
+                    props["effort"][dof_index] = float(effort)
+
         if env_id==0:
             self.dof_pos_limits = torch.zeros(self.num_dof, 2, dtype=torch.float, device=self.device, requires_grad=False)
             self.dof_vel_limits = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)

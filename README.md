@@ -30,6 +30,9 @@ Training takes about 23G GPU memory, and at least 10k iterations recommended.
 
 GO2 (`lyd_dev`): `--task=go2_amp`. AutoDL 环境要点见 [docs/autodl_setup.md](docs/autodl_setup.md)。
 
+GO2 MuJoCo-aligned camera/dynamics finetune is documented in
+[docs/go2_mujoco_finetune.md](docs/go2_mujoco_finetune.md).
+
 ## Visualization
 **Please make sure you have trained the WMP before**
 ```

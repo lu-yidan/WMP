@@ -147,6 +147,12 @@ class LeggedRobotCfg(BaseConfig):
         max_linear_velocity = 1000.
         armature = 0.
         thickness = 0.01
+        # Optional per-DOF overrides applied after importing URDF/MJCF. None
+        # preserves the values from the source asset.
+        dof_damping = None
+        dof_friction = None
+        dof_armature = None
+        dof_effort = {}
 
     class domain_rand:
         randomize_friction = True

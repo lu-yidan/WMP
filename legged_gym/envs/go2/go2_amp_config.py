@@ -144,7 +144,7 @@ class GO2AMPCfg(LeggedRobotCfg):
         camera_terrain_num_cols = 20
 
         position = [0.33, 0, 0.10]  # front camera
-        y_angle = [-5, 5]  # positive pitch down; a1 is [-5, 5]
+        y_angle = [15, 25]  # positive pitch down; MuJoCo/D435 finetune range
         z_angle = [0, 0]
         x_angle = [0, 0]
 
@@ -171,35 +171,47 @@ class GO2AMPCfg(LeggedRobotCfg):
         #     "FL_thigh", "FR_thigh", "RL_thigh", "RR_thigh"]
         # self_collisions = 0 # 1 to disable, 0 to enable...bitwise filter
         terminate_after_contacts_on = ["base"]
-        self_collisions = 1  # 1 to disable, 0 to enable...bitwise filter
+        # Match unitree_mujoco/unitree_robots/go2/go2.xml nominal dynamics.
+        self_collisions = 0  # MuJoCo keeps non-parent self collision enabled.
+        replace_cylinder_with_capsule = False
+        armature = 0.01
+        thickness = 0.001
+        dof_damping = 0.1
+        dof_friction = 0.2
+        # AssetOptions.armature is not preserved by this URDF importer, so
+        # also write the actor DOF property explicitly.
+        dof_armature = 0.01
+        dof_effort = {'calf': 45.43}
 
     class domain_rand:
         randomize_friction = True
-        friction_range = [0.5, 2.0]
+        # Keep the flags enabled so resumed critic observation dimensions do
+        # not change, but collapse every range to the MuJoCo nominal model.
+        friction_range = [1.0, 1.0]
         randomize_restitution = True
         restitution_range = [0.0, 0.0]
 
         randomize_base_mass = True
-        added_mass_range = [0., 3.]  # kg
+        added_mass_range = [0., 0.]  # kg
         randomize_link_mass = True
-        link_mass_range = [0.8, 1.2]
+        link_mass_range = [1.0, 1.0]
         randomize_com_pos = True
-        com_x_pos_range = [-0.05, 0.05]
-        com_y_pos_range = [-0.05, 0.05]
-        com_z_pos_range = [-0.05, 0.05]
+        com_x_pos_range = [0.0, 0.0]
+        com_y_pos_range = [0.0, 0.0]
+        com_z_pos_range = [0.0, 0.0]
 
-        push_robots = True
+        push_robots = False
         push_interval_s = 15
         min_push_interval_s = 15
         max_push_vel_xy = 1.0
 
         randomize_gains = True
-        stiffness_multiplier_range = [0.8, 1.2]
-        damping_multiplier_range = [0.8, 1.2]
+        stiffness_multiplier_range = [1.0, 1.0]
+        damping_multiplier_range = [1.0, 1.0]
         randomize_motor_strength = True
-        motor_strength_range = [0.8, 1.2]
+        motor_strength_range = [1.0, 1.0]
         randomize_action_latency = True
-        latency_range = [0.00, 0.005]
+        latency_range = [0.0, 0.0]
 
     class normalization:
         class obs_scales:
@@ -337,4 +349,3 @@ class GO2AMPCfgPPO(LeggedRobotCfgPPO):
         training_iters = 1000
         batch_size = 1024
         loss_scale = 100
-

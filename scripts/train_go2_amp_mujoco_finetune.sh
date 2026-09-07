@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Resume a contract-compatible GO2 WMP checkpoint using the MuJoCo-aligned
+# branch configuration. max_iterations is the number of *additional* updates.
+WMP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+WMP_PYTHON="${WMP_PYTHON:-python}"
+SOURCE_RUN="${WMP_SOURCE_RUN:-WMP}"
+SOURCE_CHECKPOINT="${WMP_SOURCE_CHECKPOINT:-20000}"
+RUN_NAME="${WMP_RUN_NAME:-WMP_mujoco_camdown15_25_ft}"
+NUM_ENVS="${WMP_NUM_ENVS:-4096}"
+ITERATIONS="${WMP_FINETUNE_ITERATIONS:-5000}"
+SIM_DEVICE="${WMP_SIM_DEVICE:-cuda:0}"
+CHECKPOINT_PATH="${WMP_ROOT}/logs/go2_amp_example/${SOURCE_RUN}/model_${SOURCE_CHECKPOINT}.pt"
+
+if [[ ! -f "${CHECKPOINT_PATH}" ]]; then
+  echo "Missing resume checkpoint: ${CHECKPOINT_PATH}" >&2
+  echo "Set WMP_SOURCE_RUN and WMP_SOURCE_CHECKPOINT, or sync the checkpoint first." >&2
+  exit 2
+fi
+
+if ! PYTHON_BIN="$(command -v "${WMP_PYTHON}")"; then
+  echo "Python executable not found: ${WMP_PYTHON}" >&2
+  exit 2
+fi
+PYTHON_PREFIX="$(cd "$(dirname "${PYTHON_BIN}")/.." && pwd)"
+export LD_LIBRARY_PATH="${PYTHON_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
+if [[ -z "${VK_ICD_FILENAMES:-}" && -f /usr/share/vulkan/icd.d/nvidia_icd.json ]]; then
+  export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+fi
+cd "${WMP_ROOT}"
+exec "${PYTHON_BIN}" legged_gym/scripts/train.py \
+  --task=go2_amp \
+  --headless \
+  --sim_device="${SIM_DEVICE}" \
+  --rl_device="${SIM_DEVICE}" \
+  --num_envs="${NUM_ENVS}" \
+  --resume \
+  --load_run="${SOURCE_RUN}" \
+  --checkpoint="${SOURCE_CHECKPOINT}" \
+  --run_name="${RUN_NAME}" \
+  --max_iterations="${ITERATIONS}"
