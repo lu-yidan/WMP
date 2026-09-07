@@ -7,11 +7,28 @@ WMP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WMP_PYTHON="${WMP_PYTHON:-python}"
 SOURCE_RUN="${WMP_SOURCE_RUN:-WMP}"
 SOURCE_CHECKPOINT="${WMP_SOURCE_CHECKPOINT:-20000}"
-RUN_NAME="${WMP_RUN_NAME:-WMP_mujoco_camdown15_25_ft}"
+CAMERA_PROFILE="${WMP_CAMERA_PROFILE:-down}"
 NUM_ENVS="${WMP_NUM_ENVS:-4096}"
 ITERATIONS="${WMP_FINETUNE_ITERATIONS:-5000}"
 SIM_DEVICE="${WMP_SIM_DEVICE:-cuda:0}"
+SEED="${WMP_SEED:-1}"
 CHECKPOINT_PATH="${WMP_ROOT}/logs/go2_amp_example/${SOURCE_RUN}/model_${SOURCE_CHECKPOINT}.pt"
+
+case "${CAMERA_PROFILE}" in
+  down)
+    TASK="go2_amp_mujoco_cam_down"
+    DEFAULT_RUN_NAME="WMP_mujoco_camdown15_25_ft"
+    ;;
+  legacy)
+    TASK="go2_amp_mujoco_cam_legacy"
+    DEFAULT_RUN_NAME="WMP_mujoco_cam_m5_p5_ft"
+    ;;
+  *)
+    echo "Unknown WMP_CAMERA_PROFILE=${CAMERA_PROFILE}; expected down or legacy." >&2
+    exit 2
+    ;;
+esac
+RUN_NAME="${WMP_RUN_NAME:-${DEFAULT_RUN_NAME}}"
 
 if [[ ! -f "${CHECKPOINT_PATH}" ]]; then
   echo "Missing resume checkpoint: ${CHECKPOINT_PATH}" >&2
@@ -29,8 +46,10 @@ if [[ -z "${VK_ICD_FILENAMES:-}" && -f /usr/share/vulkan/icd.d/nvidia_icd.json ]
   export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
 fi
 cd "${WMP_ROOT}"
+echo "Resume: ${CHECKPOINT_PATH}"
+echo "Experiment: profile=${CAMERA_PROFILE} task=${TASK} run=${RUN_NAME} seed=${SEED}"
 exec "${PYTHON_BIN}" legged_gym/scripts/train.py \
-  --task=go2_amp \
+  --task="${TASK}" \
   --headless \
   --sim_device="${SIM_DEVICE}" \
   --rl_device="${SIM_DEVICE}" \
@@ -39,4 +58,5 @@ exec "${PYTHON_BIN}" legged_gym/scripts/train.py \
   --load_run="${SOURCE_RUN}" \
   --checkpoint="${SOURCE_CHECKPOINT}" \
   --run_name="${RUN_NAME}" \
+  --seed="${SEED}" \
   --max_iterations="${ITERATIONS}"

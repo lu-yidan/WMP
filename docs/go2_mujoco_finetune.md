@@ -9,7 +9,7 @@ This branch is a checkpoint-compatible finetune profile for `go2_amp`. It does n
 | Parameter | Finetune value | MuJoCo source |
 | --- | ---: | --- |
 | camera position | `[0.33, 0, 0.10]` m | `go2.xml` `wmp_depth` |
-| camera pitch | random downward `15–25°` | MuJoCo nominal `20°` and requested D435 mounting range |
+| camera pitch | explicit profile: legacy `-5–5°` or downward `15–25°` | controlled A/B comparison; MuJoCo nominal `20°` |
 | image/FOV/range | `64×64`, square `58°`, `0–2 m` | deployment depth contract |
 | joint passive damping | `0.1` | `go2.xml` joint default |
 | joint armature | `0.01` | `go2.xml` joint default |
@@ -38,18 +38,44 @@ conda activate wmp
 export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
 export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"
 
-# Expected source: logs/go2_amp_example/WMP/model_20000.pt
+# Both profiles resume exactly the same source:
+# logs/go2_amp_example/WMP/model_20000.pt
 WMP_PYTHON="$CONDA_PREFIX/bin/python" \
 WMP_NUM_ENVS=4096 \
 WMP_FINETUNE_ITERATIONS=5000 \
+WMP_CAMERA_PROFILE=down \
 ./scripts/train_go2_amp_mujoco_finetune.sh
 ```
+
+For a controlled camera ablation, keep checkpoint, seed and all other settings
+identical and change only the profile. Use separate GPUs or run them sequentially;
+two 4096-environment jobs should not share one GPU.
+
+```bash
+# A: source-camera distribution, isolates the dynamics/model change
+WMP_CAMERA_PROFILE=legacy WMP_SEED=1 \
+  ./scripts/train_go2_amp_mujoco_finetune.sh
+
+# B: D435/MuJoCo camera distribution, same source and seed
+WMP_CAMERA_PROFILE=down WMP_SEED=1 \
+  ./scripts/train_go2_amp_mujoco_finetune.sh
+```
+
+The registered tasks are `go2_amp_mujoco_cam_legacy` (`-5–5°`) and
+`go2_amp_mujoco_cam_down` (`15–25°`). Their default output directories are
+`WMP_mujoco_cam_m5_p5_ft` and `WMP_mujoco_camdown15_25_ft`, respectively, so
+checkpoints never overwrite each other. This also avoids relying on an edited
+base `go2_amp` configuration.
+
+为了做严格的相机消融实验，两组实验应使用相同源 checkpoint、相同 seed、
+相同动力学和相同训练轮数，只切换 `WMP_CAMERA_PROFILE`。两个 4096 环境任务
+不要同时挤在同一张 GPU 上；应使用不同 GPU，或顺序执行。
 
 `WMP_FINETUNE_ITERATIONS` means additional iterations after the checkpoint's internal `iter`. The supplied local `model_20000.pt` is named 20000 but stores `iter=0`; the launcher resumes weights and optimizers correctly, but new checkpoint numbering follows that internal metadata.
 
 `WMP_FINETUNE_ITERATIONS` 表示在 checkpoint 内部 `iter` 之后额外训练的轮数。本地 `model_20000.pt` 虽然文件名为 20000，但内部保存的是 `iter=0`；权重和 PPO optimizer 仍会恢复，新 checkpoint 的编号则按内部元数据继续。
 
-The output directory is `logs/go2_amp_example/WMP_mujoco_camdown15_25_ft` by default. Override source/output without editing code:
+The downward-profile output directory is `logs/go2_amp_example/WMP_mujoco_camdown15_25_ft` by default. Override source/output without editing code:
 
 ```bash
 WMP_SOURCE_RUN=WMP \

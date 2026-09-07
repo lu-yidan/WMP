@@ -36,6 +36,10 @@ from .a1.a1_amp_config import A1AMPCfg, A1AMPCfgPPO
 
 from .go2.go2_config import GO2RoughCfg, GO2RoughCfgPPO
 from .go2.go2_amp_config import GO2AMPCfg, GO2AMPCfgPPO
+from .go2.go2_amp_camera_profiles import (
+    GO2AMPCameraDownCfg,
+    GO2AMPCameraLegacyCfg,
+)
 
 import os
 
@@ -46,3 +50,11 @@ task_registry.register( "a1_amp", LeggedRobot, A1AMPCfg(), A1AMPCfgPPO() )
 
 task_registry.register( "go2", LeggedRobot, GO2RoughCfg(), GO2RoughCfgPPO() )
 task_registry.register( "go2_amp", LeggedRobot, GO2AMPCfg(), GO2AMPCfgPPO() )
+task_registry.register(
+    "go2_amp_mujoco_cam_legacy", LeggedRobot,
+    GO2AMPCameraLegacyCfg(), GO2AMPCfgPPO(),
+)
+task_registry.register(
+    "go2_amp_mujoco_cam_down", LeggedRobot,
+    GO2AMPCameraDownCfg(), GO2AMPCfgPPO(),
+)
