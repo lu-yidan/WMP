@@ -144,7 +144,7 @@ class GO2AMPCfg(LeggedRobotCfg):
         camera_terrain_num_cols = 20
 
         position = [0.33, 0, 0.10]  # front camera
-        y_angle = [15, 25]  # positive pitch down; MuJoCo/D435 finetune range
+        y_angle = [-5, 5]  # positive pitch down; MuJoCo/D435 finetune range
         z_angle = [0, 0]
         x_angle = [0, 0]
 
