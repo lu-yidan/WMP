@@ -104,23 +104,41 @@ def parse_sim_params(args, cfg):
     return sim_params
 
 def get_load_path(root, load_run=-1, checkpoint=-1):
-    try:
-        runs = os.listdir(root)
-        #TODO sort by date to handle change of month
-        runs.sort()
-        if 'exported' in runs: runs.remove('exported')
-        last_run = os.path.join(root, runs[-1])
-    except:
-        raise ValueError("No runs in this directory: " + root)
     if load_run==-1:
-        load_run = last_run
+        runs = []
+        if os.path.isdir(root):
+            for run_name in os.listdir(root):
+                run_path = os.path.join(root, run_name)
+                if run_name == 'exported' or not os.path.isdir(run_path):
+                    continue
+                models = [name for name in os.listdir(run_path)
+                          if name.startswith('model_') and name.endswith('.pt')]
+                if models:
+                    newest_model = max(
+                        os.path.getmtime(os.path.join(run_path, name)) for name in models
+                    )
+                    runs.append((newest_model, run_path))
+        if not runs:
+            raise ValueError("No runs containing checkpoints in directory: " + root)
+        load_run = max(runs, key=lambda item: item[0])[1]
     else:
         load_run = os.path.join(root, load_run)
 
+    if not os.path.isdir(load_run):
+        raise ValueError("Run directory does not exist: " + load_run)
     if checkpoint==-1:
-        models = [file for file in os.listdir(load_run) if 'model' in file]
-        models.sort(key=lambda m: '{0:0>15}'.format(m))
-        model = models[-1]
+        models = []
+        for name in os.listdir(load_run):
+            if not name.startswith('model_') or not name.endswith('.pt'):
+                continue
+            try:
+                iteration = int(name[len('model_'):-len('.pt')])
+            except ValueError:
+                continue
+            models.append((iteration, name))
+        if not models:
+            raise ValueError("No model checkpoints in run directory: " + load_run)
+        model = max(models, key=lambda item: item[0])[1]
     else:
         model = "model_{}.pt".format(checkpoint) 
 

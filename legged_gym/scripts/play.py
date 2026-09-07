@@ -115,7 +115,7 @@ def play(args):
     obs = env.get_observations()
     # load policy
     train_cfg.runner.resume = True
-    train_cfg.runner.load_run = 'WMP'
+    train_cfg.runner.load_run = -1  # latest run under logs/<experiment_name>/
 
 
     train_cfg.runner.checkpoint = -1

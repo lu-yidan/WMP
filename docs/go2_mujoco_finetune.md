@@ -73,8 +73,8 @@ WMP_CAMERA_PROFILE=down WMP_SEED=1 \
 ```
 
 The registered tasks are `go2_amp_mujoco_cam_legacy` (`-5–5°`) and
-`go2_amp_mujoco_cam_down` (`15–25°`). Their default output directories are
-`WMP_mujoco_cam_m5_p5_ft` and `WMP_mujoco_camdown15_25_ft`, respectively, so
+`go2_amp_mujoco_cam_down` (`15–25°`). Their timestamped output directories end
+in `WMP_mujoco_cam_m5_p5_ft` and `WMP_mujoco_camdown15_25_ft`, respectively, so
 checkpoints never overwrite each other. This also avoids relying on an edited
 base `go2_amp` configuration.
 
@@ -86,7 +86,9 @@ base `go2_amp` configuration.
 
 `WMP_FINETUNE_ITERATIONS` 表示在 checkpoint 内部 `iter` 之后额外训练的轮数。本地 `model_20000.pt` 虽然文件名为 20000，但内部保存的是 `iter=0`；权重和 PPO optimizer 仍会恢复，新 checkpoint 的编号则按内部元数据继续。
 
-The downward-profile output directory is `logs/go2_amp_example/WMP_mujoco_camdown15_25_ft` by default. Override source/output without editing code:
+The downward-profile output directory matches
+`logs/go2_amp_example/<timestamp>_WMP_mujoco_camdown15_25_ft` by default.
+Override source/output without editing code:
 
 ```bash
 WMP_SOURCE_RUN=WMP \

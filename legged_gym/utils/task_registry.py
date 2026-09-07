@@ -140,21 +140,24 @@ class TaskRegistry():
 
         if log_root=="default":
             log_root = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name)
-            log_dir = os.path.join(log_root, train_cfg.runner.run_name)
-            # log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
+            log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
         elif log_root is None:
             log_dir = None
         else:
-            # log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
-            log_dir = os.path.join(log_root, train_cfg.runner.run_name)
+            log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
+        resume_path = None
+        if train_cfg.runner.resume:
+            if log_root is None:
+                raise ValueError("Cannot resume when log_root is None")
+            resume_path = get_load_path(
+                log_root,
+                load_run=train_cfg.runner.load_run,
+                checkpoint=train_cfg.runner.checkpoint,
+            )
         runner_class = eval(train_cfg.runner_class_name)
         train_cfg_dict = class_to_dict(train_cfg)
         runner = runner_class(env, train_cfg_dict, log_dir, device=args.rl_device)
-        #save resume path before creating a new log_dir
-        resume = train_cfg.runner.resume
-        if resume:
-            # load previously trained model
-            resume_path = get_load_path(log_root, load_run=train_cfg.runner.load_run, checkpoint=train_cfg.runner.checkpoint)
+        if resume_path is not None:
             print(f"Loading model from: {resume_path}")
             runner.load(resume_path)
         return runner, train_cfg
@@ -195,21 +198,24 @@ class TaskRegistry():
 
         if log_root=="default":
             log_root = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name)
-            log_dir = os.path.join(log_root, train_cfg.runner.run_name)
-            # log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
+            log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
         elif log_root is None:
             log_dir = None
         else:
-            # log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
-            log_dir = os.path.join(log_root, train_cfg.runner.run_name)
+            log_dir = os.path.join(log_root, datetime.now().strftime('%b%d_%H-%M-%S') + '_' + train_cfg.runner.run_name)
+        resume_path = None
+        if train_cfg.runner.resume:
+            if log_root is None:
+                raise ValueError("Cannot resume when log_root is None")
+            resume_path = get_load_path(
+                log_root,
+                load_run=train_cfg.runner.load_run,
+                checkpoint=train_cfg.runner.checkpoint,
+            )
         # print(train_cfg.runner_class_name)
         train_cfg_dict = class_to_dict(train_cfg)
         runner = WMPRunner(env, train_cfg_dict, log_dir, device=args.rl_device)
-        #save resume path before creating a new log_dir
-        resume = train_cfg.runner.resume
-        if resume:
-            # load previously trained model
-            resume_path = get_load_path(log_root, load_run=train_cfg.runner.load_run, checkpoint=train_cfg.runner.checkpoint)
+        if resume_path is not None:
             print(f"Loading model from: {resume_path}")
             runner.load(resume_path)
         return runner, train_cfg
