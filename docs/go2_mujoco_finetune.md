@@ -43,9 +43,20 @@ export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"
 WMP_PYTHON="$CONDA_PREFIX/bin/python" \
 WMP_NUM_ENVS=4096 \
 WMP_FINETUNE_ITERATIONS=5000 \
-WMP_CAMERA_PROFILE=down \
+WMP_CAMERA_PROFILE=legacy \
 ./scripts/train_go2_amp_mujoco_finetune.sh
 ```
+
+The first controlled run should use `legacy`: it preserves the source
+checkpoint's `-5–5°` camera distribution and changes only the robot
+model/dynamics side of the experiment. For this reason, `legacy` is also the
+launcher default when `WMP_CAMERA_PROFILE` is omitted. Train the `down` profile
+only after evaluating this checkpoint in Isaac Gym and MuJoCo.
+
+第一阶段先使用 `legacy`：它保留源 checkpoint 的 `-5–5°` 相机分布，
+只验证机器人模型与动力学修改。因此，不设置 `WMP_CAMERA_PROFILE` 时
+启动器也默认选择 `legacy`。完成 Isaac Gym 和 MuJoCo 对比后，
+再单独训练 `down` 版本。
 
 For a controlled camera ablation, keep checkpoint, seed and all other settings
 identical and change only the profile. Use separate GPUs or run them sequentially;

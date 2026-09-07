@@ -7,7 +7,9 @@ WMP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WMP_PYTHON="${WMP_PYTHON:-python}"
 SOURCE_RUN="${WMP_SOURCE_RUN:-WMP}"
 SOURCE_CHECKPOINT="${WMP_SOURCE_CHECKPOINT:-20000}"
-CAMERA_PROFILE="${WMP_CAMERA_PROFILE:-down}"
+# Keep the source checkpoint's camera distribution by default so the first
+# experiment isolates the MuJoCo-aligned robot model/dynamics changes.
+CAMERA_PROFILE="${WMP_CAMERA_PROFILE:-legacy}"
 NUM_ENVS="${WMP_NUM_ENVS:-4096}"
 ITERATIONS="${WMP_FINETUNE_ITERATIONS:-5000}"
 SIM_DEVICE="${WMP_SIM_DEVICE:-cuda:0}"
