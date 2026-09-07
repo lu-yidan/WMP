@@ -98,6 +98,22 @@ WMP_FINETUNE_ITERATIONS=3000 \
 ./scripts/train_go2_amp_mujoco_finetune.sh
 ```
 
-This first profile aligns the high-impact passive/contact settings. Distal calf/foot inertial aggregation and PhysX-vs-MuJoCo contact solver semantics are still not identical; record those as separate model revisions rather than silently compensating with action scale.
+This first profile aligns the high-impact passive/contact settings. It enables
+self collision and penalizes any `thigh` or `calf` body whose net contact force
+exceeds 0.1 N; the reward scale is `-1.0` before the standard policy-step `dt`
+scaling. This signal does not distinguish robot self-contact from terrain
+contact on those bodies.
 
-这一版先对齐高影响的被动关节和接触参数。小腿/脚掌的惯量聚合以及 PhysX 与 MuJoCo 接触求解器仍不可能完全等价；后续应作为独立模型版本记录，不要通过修改 action scale 暗中补偿。
+The collision shapes are still not identical. The Isaac training URDF uses a
+0.11 m-long thigh collision box, while the official MuJoCo model uses 0.213 m;
+the URDF also contains a third distal `calflower1` cylinder that is absent from
+the MuJoCo collision model. Distal calf/foot inertial aggregation and
+PhysX-vs-MuJoCo contact solver semantics remain different. Treat these as a
+separate, versioned collision-model experiment rather than silently
+compensating with action scale.
+
+这一版启用了自碰撞，并对净接触力超过 0.1 N 的 `thigh`/`calf`
+刚体计入碰撞惩罚；但该信号无法区分自碰撞和腿部碰到地形。Isaac
+训练 URDF 的大腿碰撞盒长 0.11 m，MuJoCo 为 0.213 m；URDF 还多一段
+`calflower1` 末端圆柱。因此碰撞体、小腿/脚掌惯量聚合及两种求解器
+仍未完全对齐；后续应作为独立模型版本验证，不要用 action scale 暗中补偿。
