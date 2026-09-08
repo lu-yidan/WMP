@@ -20,11 +20,16 @@ This branch is a checkpoint-compatible finetune profile for `go2_amp`. It does n
 | self collision | enabled | MuJoCo non-parent collision behavior |
 | contact friction | fixed `1.0` | validation scenes |
 
-Domain-randomization flags remain enabled because their privileged values are part of the resumed critic observation. Their ranges are collapsed to the nominal MuJoCo values, preserving dimensions while removing parameter variation. Pushes are disabled. PD control remains `Kp=40`, `Kd=1`, action scale `0.25`, simulation step `5 ms`, policy rate `50 Hz`, depth/world rate `10 Hz`.
+There are two experiment families:
+
+1. **Camera ablation** (`legacy` / `down`): domain-randomization flags stay on for critic observation compatibility, but ranges collapse to MuJoCo nominal values and pushes are disabled. Isolates camera pitch while freezing dynamics DR.
+2. **DR + latency** (`down_dr_lat0_5` / `down_dr_lat2_20`): keeps the downward camera (`15–25°`) and restores the source `go2_amp` DR ranges (friction, mass, CoM, Kp/Kd, motor strength, pushes), then varies only action latency.
+
+PD nominal control remains `Kp=40`, `Kd=1`, action scale `0.25`, simulation step `5 ms`, policy rate `50 Hz`, depth/world rate `10 Hz`.
 
 Isaac Gym's URDF importer did not retain `AssetOptions.armature` in actor DOF properties during validation, so the profile also writes `dof_armature=0.01` explicitly in the DOF-property callback. A 16-environment runtime readback verifies the effective value.
 
-为保持旧 checkpoint 的 critic observation 维度，domain randomization 的开关仍为开启状态，但范围全部收缩到 MuJoCo 名义值；外力 push 已关闭。PD 控制仍为 `Kp=40`、`Kd=1`，action scale 为 `0.25`，物理步长 `5 ms`，策略频率 `50 Hz`，深度/world-model 频率 `10 Hz`。
+本分支有两类实验：（1）相机消融 `legacy`/`down`：DR 开关保留但范围塌到 MuJoCo 名义值，push 关闭；（2）DR+延迟 `down_dr_lat0_5`/`down_dr_lat2_20`：固定向下相机，恢复与源 go2 一致的 DR，只改 action latency。名义 PD 仍为 `Kp=40`、`Kd=1`。
 
 ## Server resume / 服务器续训
 
@@ -72,7 +77,7 @@ WMP_CAMERA_PROFILE=down WMP_SEED=1 \
   ./scripts/train_go2_amp_mujoco_finetune.sh
 ```
 
-The registered tasks are `go2_amp_mujoco_cam_legacy` (`-5–5°`) and
+The registered camera-ablation tasks are `go2_amp_mujoco_cam_legacy` (`-5–5°`) and
 `go2_amp_mujoco_cam_down` (`15–25°`). Their timestamped output directories end
 in `WMP_mujoco_cam_m5_p5_ft` and `WMP_mujoco_camdown15_25_ft`, respectively, so
 checkpoints never overwrite each other. This also avoids relying on an edited
@@ -82,19 +87,63 @@ base `go2_amp` configuration.
 相同动力学和相同训练轮数，只切换 `WMP_CAMERA_PROFILE`。两个 4096 环境任务
 不要同时挤在同一张 GPU 上；应使用不同 GPU，或顺序执行。
 
+## Domain-rand + latency finetune / DR 与延迟微调
+
+After the downward camera looked better in the collapsed-DR ablation, restore the
+source go2 DR and compare action-latency ranges. Both profiles use camera
+`15–25°` and the same DR table as the original `go2_amp` training snapshot:
+
+| Parameter | Range |
+| --- | ---: |
+| friction | `[0.5, 2.0]` |
+| added base mass | `[0, 3]` kg |
+| link mass scale | `[0.8, 1.2]` |
+| CoM xyz | `±0.05` m |
+| Kp / Kd multipliers | `[0.8, 1.2]` |
+| motor strength | `[0.8, 1.2]` |
+| pushes | enabled (`max_push_vel_xy=1.0`) |
+
+| `WMP_CAMERA_PROFILE` | Task | Latency config | Discrete steps @ `dt=5 ms` | Run suffix |
+| --- | --- | ---: | ---: | --- |
+| `down_dr_lat0_5` | `go2_amp_mujoco_dr_lat0_5` | `[0, 5]` ms | `0–1` (0 / 5 ms) | `WMP_mujoco_dr_lat0_5_ft` |
+| `down_dr_lat2_20` | `go2_amp_mujoco_dr_lat2_20` | `[2, 20]` ms | `1–4` (5 / 10 / 15 / 20 ms) | `WMP_mujoco_dr_lat2_20_ft` |
+
+Latency is applied inside the PD decimation loop by reusing `last_actions` for
+the first N sim substeps. Lower bounds use `ceil`, so `[2, 20] ms` does not
+collapse to a zero-delay sample under a 5 ms physics step.
+
+```bash
+# Match original go2 latency
+WMP_SIM_DEVICE=cuda:2 WMP_CAMERA_PROFILE=down_dr_lat0_5 WMP_SEED=1 \
+  ./scripts/train_go2_amp_mujoco_finetune.sh
+
+# Longer latency stress test
+WMP_SIM_DEVICE=cuda:3 WMP_CAMERA_PROFILE=down_dr_lat2_20 WMP_SEED=1 \
+  ./scripts/train_go2_amp_mujoco_finetune.sh
+```
+
+Always set `WMP_SIM_DEVICE` to a free GPU. The launcher also passes matching
+`--rl_device` / `--wm_device`; otherwise the world model can default to
+`cuda:0` and OOM against an existing job.
+
+在塌缩 DR 的相机消融中，向下相机效果更好。随后恢复源 go2 的 DR，并只对比
+action latency：`[0,5] ms` 与 `[2,20] ms`。延迟在 PD decimation 内用
+`last_actions` 实现；下界按 `ceil` 换算，因此在 `dt=5 ms` 下 `[2,20] ms`
+会落在 1–4 个 substep（5–20 ms），不会抽到 0 延迟。启动时务必指定空闲
+`WMP_SIM_DEVICE`，否则 world model 可能占到 `cuda:0`。
+
 `WMP_FINETUNE_ITERATIONS` means additional iterations after the checkpoint's internal `iter`. The supplied local `model_20000.pt` is named 20000 but stores `iter=0`; the launcher resumes weights and optimizers correctly, but new checkpoint numbering follows that internal metadata.
 
 `WMP_FINETUNE_ITERATIONS` 表示在 checkpoint 内部 `iter` 之后额外训练的轮数。本地 `model_20000.pt` 虽然文件名为 20000，但内部保存的是 `iter=0`；权重和 PPO optimizer 仍会恢复，新 checkpoint 的编号则按内部元数据继续。
 
-The downward-profile output directory matches
-`logs/go2_amp_example/<timestamp>_WMP_mujoco_camdown15_25_ft` by default.
 Override source/output without editing code:
 
 ```bash
 WMP_SOURCE_RUN=WMP \
 WMP_SOURCE_CHECKPOINT=20000 \
-WMP_RUN_NAME=WMP_mujoco_camdown15_25_ft_v2 \
+WMP_RUN_NAME=WMP_mujoco_dr_lat0_5_ft_v2 \
 WMP_FINETUNE_ITERATIONS=3000 \
+WMP_CAMERA_PROFILE=down_dr_lat0_5 \
 ./scripts/train_go2_amp_mujoco_finetune.sh
 ```
 

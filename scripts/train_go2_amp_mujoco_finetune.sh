@@ -12,7 +12,7 @@ SOURCE_CHECKPOINT="${WMP_SOURCE_CHECKPOINT:-20000}"
 CAMERA_PROFILE="${WMP_CAMERA_PROFILE:-legacy}"
 NUM_ENVS="${WMP_NUM_ENVS:-4096}"
 ITERATIONS="${WMP_FINETUNE_ITERATIONS:-5000}"
-SIM_DEVICE="${WMP_SIM_DEVICE:-cuda:0}"
+SIM_DEVICE="${WMP_SIM_DEVICE:-cuda:2}"
 SEED="${WMP_SEED:-1}"
 CHECKPOINT_PATH="${WMP_ROOT}/logs/go2_amp_example/${SOURCE_RUN}/model_${SOURCE_CHECKPOINT}.pt"
 
@@ -25,8 +25,18 @@ case "${CAMERA_PROFILE}" in
     TASK="go2_amp_mujoco_cam_legacy"
     DEFAULT_RUN_NAME="WMP_mujoco_cam_m5_p5_ft"
     ;;
+  down_dr_lat0_5)
+    # Downward camera + go2-matched DR + latency [0, 5] ms
+    TASK="go2_amp_mujoco_dr_lat0_5"
+    DEFAULT_RUN_NAME="WMP_mujoco_dr_lat0_5_ft"
+    ;;
+  down_dr_lat2_20)
+    # Downward camera + go2-matched DR + latency [2, 20] ms
+    TASK="go2_amp_mujoco_dr_lat2_20"
+    DEFAULT_RUN_NAME="WMP_mujoco_dr_lat2_20_ft"
+    ;;
   *)
-    echo "Unknown WMP_CAMERA_PROFILE=${CAMERA_PROFILE}; expected down or legacy." >&2
+    echo "Unknown WMP_CAMERA_PROFILE=${CAMERA_PROFILE}; expected legacy, down, down_dr_lat0_5, or down_dr_lat2_20." >&2
     exit 2
     ;;
 esac
@@ -55,6 +65,7 @@ exec "${PYTHON_BIN}" legged_gym/scripts/train.py \
   --headless \
   --sim_device="${SIM_DEVICE}" \
   --rl_device="${SIM_DEVICE}" \
+  --wm_device="${SIM_DEVICE}" \
   --num_envs="${NUM_ENVS}" \
   --resume \
   --load_run="${SOURCE_RUN}" \

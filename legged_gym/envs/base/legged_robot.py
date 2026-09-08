@@ -123,8 +123,15 @@ class LeggedRobot(BaseTask):
         self.global_counter = 0
         self.total_env_steps_counter = 0
 
-        self.latency_range = [int((self.cfg.domain_rand.latency_range[0] + 1e-8) / self.sim_params.dt),
-                                 int((self.cfg.domain_rand.latency_range[1] - 1e-8) / self.sim_params.dt) + 1]
+        # Convert latency seconds -> inclusive sim-step bounds.
+        # Lower uses ceil so [2 ms, 20 ms] with dt=5 ms becomes [1, 4] steps.
+        lo_t, hi_t = self.cfg.domain_rand.latency_range
+        dt = self.sim_params.dt
+        lo_steps = int(math.ceil((lo_t - 1e-12) / dt)) if lo_t > 0.0 else 0
+        hi_steps = int(math.floor((hi_t + 1e-12) / dt))
+        if hi_steps < lo_steps:
+            hi_steps = lo_steps
+        self.latency_range = [lo_steps, hi_steps]
 
         if self.cfg.rewards.reward_curriculum:
             self.reward_curriculum_coef = [schedule[2] for schedule in self.cfg.rewards.reward_curriculum_schedule]
