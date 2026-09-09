@@ -55,6 +55,11 @@ WMP_SEED=1 WMP_SIM_DEVICE=cuda:0 \
 
 ## Server launch record / 服务器启动记录
 
+更新：用户随后取消原奖励继续训练对照。已向 PID 693002/693003 发送
+SIGINT，GPU0/1 不再安排任务，保留日志与已产生的 checkpoint。
+本轮以 Sep08 两组 model_3000.pt 为原奖励基线，只运行 GPU2/3 站立版。
+下面表格为历史启动记录，不代表四组仍在运行。
+
 2026-09-09，SSH alias `gpu4090`，仓库 `/root/workplace/WMP`，代码 `ff0de09`。
 按用户要求向旧进程 5232（go2_amp）和 98921（a1_amp）发送 SIGINT；
 保留磁盘上的 `go2_amp_example/WMP/model_31000.pt` 和
