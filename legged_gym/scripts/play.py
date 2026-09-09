@@ -48,6 +48,11 @@ from legged_gym.utils import  get_args, export_policy_as_jit, task_registry, Log
 import numpy as np
 import torch
 
+PLAY_ARGUMENTS = [
+    {"name": "--terrain_level", "type": int, "default": None,
+     "help": "Fixed terrain row for all playback robots (0-9); omitted: original per-robot levels"},
+]
+
 
 def play(args, command_source=None, duration_s=None, status_hz=0.0):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
@@ -55,6 +60,13 @@ def play(args, command_source=None, duration_s=None, status_hz=0.0):
     env_cfg.env.num_envs = min(env_cfg.env.num_envs, 10)
     env_cfg.terrain.num_cols = 1
     env_cfg.terrain.curriculum = False
+    terrain_level = getattr(args, "terrain_level", None)
+    if terrain_level is not None:
+        if env_cfg.terrain.mesh_type not in ("heightfield", "trimesh"):
+            raise ValueError("--terrain_level requires heightfield or trimesh terrain")
+        if not 0 <= terrain_level < env_cfg.terrain.num_rows:
+            raise ValueError(f"--terrain_level must be in [0, {env_cfg.terrain.num_rows - 1}]")
+        env_cfg.terrain.playback_level = terrain_level
     env_cfg.noise.add_noise = False
     # env_cfg.domain_rand.randomize_friction = False
     # env_cfg.domain_rand.randomize_restitution = False
@@ -117,6 +129,17 @@ def play(args, command_source=None, duration_s=None, status_hz=0.0):
 
     # prepare environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
+    robot_index = 0
+    # depth_buffer is indexed by camera slot, not robot ID. Select the same
+    # robot for the depth window and follow camera before reset renders frames.
+    depth_slot = int(env.depth_index_inverse[robot_index])
+    if depth_slot < 0:
+        raise ValueError(f"Playback robot {robot_index} has no depth camera")
+    env.lookat_id = depth_slot
+    print(f"Playback view: robot={robot_index}, depth_camera_slot={depth_slot}")
+    if env.custom_origins:
+        print(f"Playback terrain: robot={robot_index}, level={int(env.terrain_levels[robot_index])}, "
+              f"fixed_level={terrain_level}, curriculum=False")
     _, _ = env.reset()
     obs = env.get_observations()
     # load policy
@@ -135,7 +158,6 @@ def play(args, command_source=None, duration_s=None, status_hz=0.0):
         print('Exported policy as jit script to: ', path)
 
     logger = Logger(env.dt)
-    robot_index = 0 # which robot is used for logging
     joint_index = 1 # which joint is used for logging
     stop_state_log = 100 # number of steps before plotting states
     stop_rew_log = env.max_episode_length + 1 # number of steps before print average episode rewards
@@ -294,6 +316,6 @@ if __name__ == '__main__':
     EXPORT_POLICY = True
     RECORD_FRAMES = False
     MOVE_CAMERA = True
-    args = get_args()
+    args = get_args(PLAY_ARGUMENTS)
     args.rl_device = args.sim_device
     play(args)

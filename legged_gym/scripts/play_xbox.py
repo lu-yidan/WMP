@@ -17,7 +17,7 @@ from legged_gym.utils.xbox_controller import XboxJoystick
 
 def main():
     args = get_args(
-        [
+        play_module.PLAY_ARGUMENTS + [
             {"name": "--xbox_device", "type": str, "default": "/dev/input/js0"},
             {"name": "--max_forward", "type": float, "default": 0.6},
             {"name": "--max_lateral", "type": float, "default": 0.0},

@@ -77,6 +77,18 @@ and runs until the viewer closes or Back is pressed; use `--play_duration 60`
 for a bounded run. A 1 Hz `xbox_status` line reports the exact command, measured
 base yaw rate and four foot contacts; set `--status_hz 0` to disable it.
 
+Both `play.py` and `play_xbox.py` accept `--terrain_level 8` to place all
+robots on a fixed terrain row, independently of robot count. With the current
+10-row climb terrain, levels 0/4/8/9 have nominal heights 0/24/48/54 cm.
+Omitting the option preserves per-robot levels (a single robot starts at 0).
+The main camera and depth window now follow the same robot, including during reset.
+
+普通 play 和 Xbox play 均可追加 `--terrain_level 8`，独立选择地形难度，
+无需修改 robot_index 或创建 9 个机器人。当前 climb 的 0/4/8/9 级名义高度为
+0/24/48/54 cm；省略参数保留旧分配方式，单机器人默认第 0 级。
+这是固定难度测试，重置不自动升级，不影响训练课程。主视角与深度窗口始终
+对应同一机器人；此前窗口不同步只是显示问题，不能据此判断策略收到了错误深度。
+
 
 ## Acknowledgments
 

@@ -1311,6 +1311,10 @@ class LeggedRobot(BaseTask):
             if not self.cfg.terrain.curriculum: max_init_level = self.cfg.terrain.num_rows - 1
             # self.terrain_levels = torch.randint(0, max_init_level + 1, (self.num_envs,), device=self.device)
             self.terrain_levels = torch.fmod(torch.arange(self.num_envs, device=self.device), max_init_level + 1)
+            # Explicit playback override; training retains its original assignment.
+            playback_level = getattr(self.cfg.terrain, "playback_level", None)
+            if playback_level is not None:
+                self.terrain_levels.fill_(playback_level)
             self.terrain_types = torch.div(torch.arange(self.num_envs, device=self.device), (self.num_envs/self.cfg.terrain.num_cols), rounding_mode='floor').to(torch.long)
             self.max_terrain_level = self.cfg.terrain.num_rows
             self.terrain_origins = torch.from_numpy(self.terrain.env_origins).to(self.device).to(torch.float)
