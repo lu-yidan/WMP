@@ -45,6 +45,8 @@ from .go2.go2_amp_dr_profiles import (
     GO2AMPMujocoDRLat2_20Cfg,
     GO2AMPMujocoDRLat2_20StandCfg,
     GO2AMPMujocoDRLat0_5StandCfg,
+    GO2AMPMujocoDRLat0_5StandNoContactCfg,
+    GO2AMPMujocoDRLat0_5StandQuietCfg,
 )
 
 import os
@@ -79,4 +81,12 @@ task_registry.register(
 task_registry.register(
     "go2_amp_mujoco_dr_lat0_5_stand", LeggedRobot,
     GO2AMPMujocoDRLat0_5StandCfg(), GO2AMPCfgPPO(),
+)
+task_registry.register(
+    "go2_amp_mujoco_dr_lat0_5_stand_no_contact", LeggedRobot,
+    GO2AMPMujocoDRLat0_5StandNoContactCfg(), GO2AMPCfgPPO(),
+)
+task_registry.register(
+    "go2_amp_mujoco_dr_lat0_5_stand_quiet", LeggedRobot,
+    GO2AMPMujocoDRLat0_5StandQuietCfg(), GO2AMPCfgPPO(),
 )

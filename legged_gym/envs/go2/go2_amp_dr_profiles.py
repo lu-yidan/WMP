@@ -66,3 +66,19 @@ class GO2AMPMujocoDRLat0_5StandCfg(GO2AMPMujocoDRLat0_5Cfg):
 
     class rewards(GO2AMPMujocoDRLat2_20StandCfg.rewards):
         pass
+
+
+class GO2AMPMujocoDRLat0_5StandNoContactCfg(GO2AMPMujocoDRLat0_5StandCfg):
+    """Ablation: keep pose and quiet, remove only the contact bonus."""
+
+    class rewards(GO2AMPMujocoDRLat0_5StandCfg.rewards):
+        class scales(GO2AMPMujocoDRLat0_5StandCfg.rewards.scales):
+            stand_feet_contact = 0.0
+
+
+class GO2AMPMujocoDRLat0_5StandQuietCfg(GO2AMPMujocoDRLat0_5StandNoContactCfg):
+    """Ablation: retain only quiet among the added stance rewards."""
+
+    class rewards(GO2AMPMujocoDRLat0_5StandNoContactCfg.rewards):
+        class scales(GO2AMPMujocoDRLat0_5StandNoContactCfg.rewards.scales):
+            stand_pose = 0.0

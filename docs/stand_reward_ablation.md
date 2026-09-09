@@ -81,3 +81,23 @@ sim/rl/wm device 显式指定同一张卡。使用 nohup，SSH 断开不终止�
 GPU2 既有日志为 `dr_lat2_20_stand_cuda2_v2.log`，与 GPU1 对比时选双方
 checkpoint 1000，而非把 GPU2 的 2000 与 GPU1 的 1000 混比。
 PID 仅用于这次启动记录，后续操作前需重新核对进程身份。
+
+## Approved reward ablations / 确认执行的奖励消融
+
+用户确认将释放的 GPU0/1 改为以下任务，替代已取消的原奖励续训：
+
+| GPU | Profile (`WMP_CAMERA_PROFILE`) | pose / quiet / contact |
+| --- | --- | --- |
+| 0 | down_dr_lat0_5_stand_no_contact | 1 / 0.25 / 0 |
+| 1 | down_dr_lat0_5_stand_quiet | 0 / 0.25 / 0 |
+| 3 (unchanged) | down_dr_lat0_5_stand | 1 / 0.25 / 0.5 |
+
+两项均从 `Sep08_16-45-31_WMP_mujoco_dr_lat0_5_ft/model_3000.pt` 开始，
+4096 envs、seed=1、追加 1000 updates；sim/rl/wm 分别全部在所在 GPU。
+run names: `WMP_lat0_5_stand_no_contact_ablation_s1` / `WMP_lat0_5_stand_quiet_ablation_s1`。
+日志：`logs/finetune_launch/lat0_5_stand_no_contact_ablation_s1_cuda0.log` /
+`logs/finetune_launch/lat0_5_stand_quiet_ablation_s1_cuda1.log`。
+任务名为 profile 去掉 `down_` 后加 `go2_amp_mujoco_` 前缀（见 task registry）。
+配置对比验证：相对完整 stand 仅上述 reward scales 改变；既有全局奖励
+（例如 dof_error）并未删除，quiet-only 指仅新增站立奖励中的 quiet。
+门控、AMP、相机、延迟与 resume 行为不变。GPU2 的 2–20 ms 站立版保持运行。
