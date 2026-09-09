@@ -33,6 +33,7 @@
 
 import os
 import inspect
+import itertools
 import time
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -48,7 +49,7 @@ import numpy as np
 import torch
 
 
-def play(args):
+def play(args, command_source=None, duration_s=None):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
     env_cfg.env.num_envs = min(env_cfg.env.num_envs, 10)
@@ -107,6 +108,11 @@ def play(args):
     env_cfg.commands.ranges.flat_lin_vel_y = [-0.0, -0.0]
     env_cfg.commands.ranges.flat_ang_vel_yaw = [0.0, 0.0]
 
+    # An external command source owns all three velocity commands. Disable the
+    # heading controller and random resampling so it cannot overwrite yaw.
+    if command_source is not None:
+        env_cfg.commands.heading_command = False
+
     env_cfg.depth.use_camera = True
 
     # prepare environment
@@ -164,7 +170,24 @@ def play(args):
 
     total_reward = 0
     not_dones = torch.ones((env.num_envs,), device=env.device)
-    for i in range(1*int(env.max_episode_length) + 3):
+    if duration_s is None:
+        step_indices = range(1 * int(env.max_episode_length) + 3)
+    elif duration_s > 0:
+        step_indices = range(int(duration_s / env.dt))
+    else:
+        step_indices = itertools.count()
+
+    for i in step_indices:
+        if command_source is not None:
+            command, should_quit = command_source.poll()
+            if should_quit:
+                print("Xbox Back pressed; exiting playback.")
+                break
+            command_tensor = torch.as_tensor(command, device=env.device)
+            env.commands[:, :3] = command_tensor
+            command_start = env.privileged_dim + 6
+            obs[:, command_start:command_start + 3] = command_tensor * env.commands_scale
+
         if (env.global_counter % wm_update_interval == 0):
             if (env.cfg.depth.use_camera):
                 wm_obs["image"][env.depth_index] = infos["depth"].unsqueeze(-1).to(world_model.device)
@@ -221,7 +244,7 @@ def play(args):
                 env.gym.write_viewer_image_to_file(env.viewer, filename)
                 img_idx += 1
         if MOVE_CAMERA:
-            lootat = env.root_states[8, :3]
+            lootat = env.root_states[robot_index, :3]
             camara_position = lootat.detach().cpu().numpy() + [0, 1, 0]
             env.set_camera(camara_position, lootat)
 
@@ -249,6 +272,8 @@ def play(args):
                     logger.log_rewards(infos["episode"], num_episodes)
         elif i==stop_rew_log:
             logger.print_rewards()
+    if command_source is not None:
+        command_source.close()
 
     print('total reward:', total_reward)
 

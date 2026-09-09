@@ -39,6 +39,43 @@ GO2 MuJoCo-aligned camera/dynamics finetune is documented in
 python legged_gym/scripts/play.py --task=a1_amp --sim_device=cuda:0 --terrain=climb
 ```
 
+### GO2 Xbox playback / GO2 手柄测试
+
+`play_xbox.py` keeps the normal WMP/Isaac Gym inference path and replaces only
+the velocity command with `/dev/input/js0`. It has no pygame/evdev dependency.
+The default Linux Xbox mapping is left stick for forward/lateral velocity and
+right-stick X for yaw. Hold `RB` to send stick commands; releasing it sends an
+exact zero command, and `Back` exits. Defaults match deployment testing:
+forward `0.6 m/s`, lateral `0.0 m/s`, yaw `1.0 rad/s`, deadzone `0.08`.
+
+`play_xbox.py` 保留原来的 WMP/Isaac Gym 推理、深度相机和 RSSM 路径，只将
+速度指令替换为 `/dev/input/js0`。按住 `RB` 才输出摇杆指令；松开后严格输出
+零指令，适合检查静止时对侧腿跳动是否也在 Isaac Gym 中出现；按 `Back` 退出。
+
+```bash
+# 0-5 ms DR run, checkpoint 4000
+python legged_gym/scripts/play_xbox.py \
+  --task=go2_amp_mujoco_dr_lat0_5 \
+  --sim_device=cuda:0 \
+  --terrain=climb \
+  --load_run=Sep08_16-45-31_WMP_mujoco_dr_lat0_5_ft \
+  --checkpoint=4000
+
+# 2-20 ms DR run, checkpoint 3000
+python legged_gym/scripts/play_xbox.py \
+  --task=go2_amp_mujoco_dr_lat2_20 \
+  --sim_device=cuda:0 \
+  --terrain=climb \
+  --load_run=Sep08_20-54-13_WMP_mujoco_dr_lat2_20_ft \
+  --checkpoint=3000
+```
+
+Use `--max_forward`, `--max_lateral`, `--max_yaw`, `--deadzone`, and
+`--xbox_device` to override the defaults. `--no_deadman` is available for a
+simulation-only test but is not recommended. The script defaults to one robot
+and runs until the viewer closes or Back is pressed; use `--play_duration 60`
+for a bounded run.
+
 
 ## Acknowledgments
 

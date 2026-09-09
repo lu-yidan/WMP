@@ -106,7 +106,9 @@ class LeggedRobot(BaseTask):
         self.height_samples = None
         # for debug
         self.debug_viz = True
-        self.lookat_id = 8
+        # The original viewer assumed play.py always created at least 9 envs.
+        # Single-robot interactive playback must observe an existing env.
+        self.lookat_id = min(8, self.cfg.env.num_envs - 1)
         self.init_done = False
         self._parse_cfg(self.cfg)
         super().__init__(self.cfg, sim_params, physics_engine, sim_device, headless)
