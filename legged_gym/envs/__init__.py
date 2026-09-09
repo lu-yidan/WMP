@@ -43,6 +43,7 @@ from .go2.go2_amp_camera_profiles import (
 from .go2.go2_amp_dr_profiles import (
     GO2AMPMujocoDRLat0_5Cfg,
     GO2AMPMujocoDRLat2_20Cfg,
+    GO2AMPMujocoDRLat2_20StandCfg,
 )
 
 import os
@@ -69,4 +70,8 @@ task_registry.register(
 task_registry.register(
     "go2_amp_mujoco_dr_lat2_20", LeggedRobot,
     GO2AMPMujocoDRLat2_20Cfg(), GO2AMPCfgPPO(),
+)
+task_registry.register(
+    "go2_amp_mujoco_dr_lat2_20_stand", LeggedRobot,
+    GO2AMPMujocoDRLat2_20StandCfg(), GO2AMPCfgPPO(),
 )

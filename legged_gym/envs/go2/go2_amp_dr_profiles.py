@@ -47,3 +47,13 @@ class GO2AMPMujocoDRLat2_20Cfg(GO2AMPCfg):
         damping_multiplier_range = [0.8, 1.2]
         motor_strength_range = [0.8, 1.2]
         latency_range = [0.002, 0.020]
+
+
+class GO2AMPMujocoDRLat2_20StandCfg(GO2AMPMujocoDRLat2_20Cfg):
+    """Lat2-20 control with targeted zero-command stance rewards."""
+
+    class rewards(GO2AMPMujocoDRLat2_20Cfg.rewards):
+        class scales(GO2AMPMujocoDRLat2_20Cfg.rewards.scales):
+            stand_still = -1.0
+            stand_dof_vel = -0.05
+            stand_feet_contact = -0.5

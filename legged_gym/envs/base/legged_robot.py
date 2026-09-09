@@ -1570,7 +1570,23 @@ class LeggedRobot(BaseTask):
 
     def _reward_stand_still(self):
         # Penalize motion at zero commands
-        return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1) * (torch.norm(self.commands[:, :2], dim=1) < 0.1)
+        return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1) * self._stationary_command_mask()
+
+    def _stationary_command_mask(self):
+        """Select true zero-motion commands, including yaw."""
+        return torch.norm(self.commands[:, :3], dim=1) < 0.1
+
+    def _reward_stand_dof_vel(self):
+        # Suppress a learned stepping limit cycle only while commanded to stand.
+        return torch.sum(torch.square(self.dof_vel), dim=1) * self._stationary_command_mask()
+
+    def _reward_stand_feet_contact(self):
+        # Penalize each airborne foot at zero command. Reuse the same one-frame
+        # contact filtering principle as feet_air_time for triangle meshes.
+        contact = self.sensor_forces[:, :, 2] > 1.0
+        contact_filt = torch.logical_or(contact, self.last_contacts)
+        airborne_feet = torch.sum((~contact_filt).float(), dim=1)
+        return airborne_feet * self._stationary_command_mask()
 
     def _reward_feet_contact_forces(self):
         # penalize high contact forces

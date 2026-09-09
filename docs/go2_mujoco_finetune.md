@@ -107,6 +107,7 @@ source go2 DR and compare action-latency ranges. Both profiles use camera
 | --- | --- | ---: | ---: | --- |
 | `down_dr_lat0_5` | `go2_amp_mujoco_dr_lat0_5` | `[0, 5]` ms | `0–1` (0 / 5 ms) | `WMP_mujoco_dr_lat0_5_ft` |
 | `down_dr_lat2_20` | `go2_amp_mujoco_dr_lat2_20` | `[2, 20]` ms | `1–4` (5 / 10 / 15 / 20 ms) | `WMP_mujoco_dr_lat2_20_ft` |
+| `down_dr_lat2_20_stand` | `go2_amp_mujoco_dr_lat2_20_stand` | `[2, 20]` ms | same as above | `WMP_mujoco_dr_lat2_20_stand_ft` |
 
 Latency is applied inside the PD decimation loop by reusing `last_actions` for
 the first N sim substeps. Lower bounds use `ceil`, so `[2, 20] ms` does not
@@ -121,6 +122,46 @@ WMP_SIM_DEVICE=cuda:2 WMP_CAMERA_PROFILE=down_dr_lat0_5 WMP_SEED=1 \
 WMP_SIM_DEVICE=cuda:3 WMP_CAMERA_PROFILE=down_dr_lat2_20 WMP_SEED=1 \
   ./scripts/train_go2_amp_mujoco_finetune.sh
 ```
+
+### Zero-command stance finetune / 零命令站立微调
+
+The forward command is sampled uniformly from `[0,0.8]`; 12.5% of raw samples
+fall in `[0,0.1]`. The environment then maps every planar command with norm at
+most `0.2` to exact zero, so approximately 25% of samples become zero-forward
+commands and remain active for the 10-second resampling interval. This is enough
+coverage; the earlier issue was that the existing `stand_still` scale and global
+`dof_vel` scale were both zero, with no missing-foot-contact penalty.
+
+`down_dr_lat2_20_stand` inherits the complete lat2-20 camera/dynamics profile
+and changes only three reward scales. They are gated by the norm of the complete
+`[vx,vy,yaw]` command, so they do not oppose an in-place yaw command:
+
+| Reward | Scale | Zero-command behavior |
+| --- | ---: | --- |
+| `stand_still` | `-1.0` | joint displacement from the nominal stance |
+| `stand_dof_vel` | `-0.05` | squared joint velocity |
+| `stand_feet_contact` | `-0.5` | count of feet without filtered vertical contact |
+
+Resume the accepted lat2-20 checkpoint for a short controlled experiment:
+
+```bash
+WMP_SOURCE_RUN=Sep08_20-54-13_WMP_mujoco_dr_lat2_20_ft \
+WMP_SOURCE_CHECKPOINT=3000 \
+WMP_CAMERA_PROFILE=down_dr_lat2_20_stand \
+WMP_RUN_NAME=WMP_mujoco_dr_lat2_20_stand_ft \
+WMP_FINETUNE_ITERATIONS=2000 \
+WMP_SIM_DEVICE=cuda:0 \
+./scripts/train_go2_amp_mujoco_finetune.sh
+```
+
+Do not change AMP weighting in this first run. If the targeted task rewards do
+not remove the diagonal stepping cycle, the next isolated experiment should
+mask AMP style reward only for zero-motion commands.
+
+原始 `vx` 落入 `0–0.1 m/s` 的比例为 12.5%，但环境会把 `≤0.2 m/s`
+统一归零，因此实际约 25% 的采样是精确零速，并持续 10 秒。新的 stand
+profile 只增加默认姿态、关节速度和四足接触三项零命令惩罚；第一轮不同时修改
+AMP 权重，以免破坏控制变量。
 
 Always set `WMP_SIM_DEVICE` to a free GPU. The launcher also passes matching
 `--rl_device` / `--wm_device`; otherwise the world model can default to
