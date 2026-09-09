@@ -54,6 +54,8 @@ class GO2AMPMujocoDRLat2_20StandCfg(GO2AMPMujocoDRLat2_20Cfg):
 
     class rewards(GO2AMPMujocoDRLat2_20Cfg.rewards):
         class scales(GO2AMPMujocoDRLat2_20Cfg.rewards.scales):
-            stand_still = -1.0
-            stand_dof_vel = -0.05
-            stand_feet_contact = -0.5
+            # Use positive stance quality rewards because the inherited task
+            # clips a negative total reward to zero.
+            stand_pose = 1.0
+            stand_quiet = 0.25
+            stand_feet_contact = 0.5

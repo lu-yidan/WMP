@@ -23,6 +23,7 @@ def main():
             {"name": "--max_lateral", "type": float, "default": 0.0},
             {"name": "--max_yaw", "type": float, "default": 1.0},
             {"name": "--deadzone", "type": float, "default": 0.08},
+            {"name": "--status_hz", "type": float, "default": 1.0},
             {"name": "--no_deadman", "action": "store_true", "default": False},
             {
                 "name": "--play_duration",
@@ -46,7 +47,12 @@ def main():
     play_module.EXPORT_POLICY = False
     play_module.RECORD_FRAMES = False
     play_module.MOVE_CAMERA = not args.headless
-    play_module.play(args, command_source=joystick, duration_s=args.play_duration)
+    play_module.play(
+        args,
+        command_source=joystick,
+        duration_s=args.play_duration,
+        status_hz=args.status_hz,
+    )
 
 
 if __name__ == "__main__":

@@ -138,9 +138,23 @@ and changes only three reward scales. They are gated by the norm of the complete
 
 | Reward | Scale | Zero-command behavior |
 | --- | ---: | --- |
-| `stand_still` | `-1.0` | joint displacement from the nominal stance |
-| `stand_dof_vel` | `-0.05` | squared joint velocity |
-| `stand_feet_contact` | `-0.5` | count of feet without filtered vertical contact |
+| `stand_pose` | `+1.0` | exponential nominal-joint-pose quality |
+| `stand_quiet` | `+0.25` | exponential low-joint-velocity quality |
+| `stand_feet_contact` | `+0.5` | number of feet with filtered vertical contact |
+
+These are positive quality rewards rather than negative costs. The inherited
+task uses `only_positive_rewards=True`; an initial negative-cost version drove
+the zero-command total to the clipping floor (`0`) and therefore could not
+distinguish a mildly unstable stance from a strongly rotating one. Do not resume
+the resulting stand checkpoint; restart this ablation from the original
+lat2-20 `model_3000.pt`.
+
+Rejected ablation record (2026-09-09): `Sep09_11-34-44_..._stand_ft/model_1000.pt`
+received an exact `[0,0,0]` Xbox command for 10 simulated seconds, yet reported
+mostly negative/rightward yaw rates (`-0.10` to `-0.38 rad/s`) and frequently
+only 2–3 contacting feet. Its clipped task reward was `0`. This proves the
+observed right turn was not joystick-center drift and is why the negative-cost
+reward version must not be used as a resume source.
 
 Resume the accepted lat2-20 checkpoint for a short controlled experiment:
 
@@ -160,8 +174,9 @@ mask AMP style reward only for zero-motion commands.
 
 原始 `vx` 落入 `0–0.1 m/s` 的比例为 12.5%，但环境会把 `≤0.2 m/s`
 统一归零，因此实际约 25% 的采样是精确零速，并持续 10 秒。新的 stand
-profile 只增加默认姿态、关节速度和四足接触三项零命令惩罚；第一轮不同时修改
-AMP 权重，以免破坏控制变量。
+profile 只增加默认姿态、低关节速度和四足接触三项零命令正向质量奖励。负惩罚
+版本会被 `only_positive_rewards` 截到零，因此应从原 lat2-20 的
+`model_3000.pt` 重新训练，而不是续训 stand-1000；第一轮仍不修改 AMP 权重。
 
 Always set `WMP_SIM_DEVICE` to a free GPU. The launcher also passes matching
 `--rl_device` / `--wm_device`; otherwise the world model can default to

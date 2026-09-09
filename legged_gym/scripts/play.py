@@ -49,7 +49,7 @@ import numpy as np
 import torch
 
 
-def play(args, command_source=None, duration_s=None):
+def play(args, command_source=None, duration_s=None, status_hz=0.0):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
     env_cfg.env.num_envs = min(env_cfg.env.num_envs, 10)
@@ -202,6 +202,19 @@ def play(args, command_source=None, duration_s=None):
 
 
         obs, _, rews, dones, infos, reset_env_ids, _ = env.step(actions.detach())
+
+        if command_source is not None and status_hz > 0:
+            status_interval = max(1, round(1.0 / (env.dt * status_hz)))
+            if i % status_interval == 0:
+                contacts = (env.sensor_forces[robot_index, :, 2] > 1.0).int().tolist()
+                print(
+                    "xbox_status "
+                    f"command=[{command[0]:+.3f},{command[1]:+.3f},{command[2]:+.3f}] "
+                    f"base_vxy=[{env.base_lin_vel[robot_index, 0]:+.3f},"
+                    f"{env.base_lin_vel[robot_index, 1]:+.3f}] "
+                    f"base_yaw_rate={env.base_ang_vel[robot_index, 2]:+.3f} "
+                    f"feet_contact={contacts}"
+                )
 
         not_dones *= (~dones)
         total_reward += torch.mean(rews * not_dones)

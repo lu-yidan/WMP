@@ -74,7 +74,8 @@ Use `--max_forward`, `--max_lateral`, `--max_yaw`, `--deadzone`, and
 `--xbox_device` to override the defaults. `--no_deadman` is available for a
 simulation-only test but is not recommended. The script defaults to one robot
 and runs until the viewer closes or Back is pressed; use `--play_duration 60`
-for a bounded run.
+for a bounded run. A 1 Hz `xbox_status` line reports the exact command, measured
+base yaw rate and four foot contacts; set `--status_hz 0` to disable it.
 
 
 ## Acknowledgments
