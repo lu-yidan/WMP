@@ -56,7 +56,8 @@ WMP_SEED=1 WMP_SIM_DEVICE=cuda:0 \
 ## Server launch record / 服务器启动记录
 
 更新：用户随后取消原奖励继续训练对照。已向 PID 693002/693003 发送
-SIGINT，GPU0/1 不再安排任务，保留日志与已产生的 checkpoint。
+SIGINT；nohup 后台任务未响应，随后以 SIGTERM 停止。GPU0/1 不再安排任务，
+保留日志与已产生的 checkpoint。
 本轮以 Sep08 两组 model_3000.pt 为原奖励基线，只运行 GPU2/3 站立版。
 下面表格为历史启动记录，不代表四组仍在运行。
 
