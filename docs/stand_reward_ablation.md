@@ -52,3 +52,26 @@ WMP_SEED=1 WMP_SIM_DEVICE=cuda:0 \
 
 当前 contact 奖励的 last_contacts 在 feet_air_time 中已被更新，一帧过滤实现
 值得独立修正；先保持本次两组奖励一致。没有证据认定 reward clipping 是主因。
+
+## Server launch record / 服务器启动记录
+
+2026-09-09，SSH alias `gpu4090`，仓库 `/root/workplace/WMP`，代码 `ff0de09`。
+按用户要求向旧进程 5232（go2_amp）和 98921（a1_amp）发送 SIGINT；
+保留磁盘上的 `go2_amp_example/WMP/model_31000.pt` 和
+`a1_amp_example/WMP/model_25000.pt`，未保证保存中断前最后一个 update。
+
+| GPU | PID at launch | Run name | Additional updates |
+| --- | --- | --- | --- |
+| 0 | 693002 | WMP_lat0_5_continue_ablation_s1 | 1000 |
+| 1 | 693003 | WMP_lat2_20_continue_ablation_s1 | 1000 |
+| 2 | 671778 (existing, untouched) | WMP_mujoco_dr_lat2_20_stand_ft | 2000 |
+| 3 | 692669 | WMP_lat0_5_stand_ablation_s1 | 1000 |
+
+新任务均使用 4096 envs、seed=1、各自 Sep08 run 的 model_3000.pt；
+sim/rl/wm device 显式指定同一张卡。使用 nohup，SSH 断开不终止训练。
+日志在 `logs/finetune_launch/`：
+`lat0_5_continue_ablation_s1_cuda0.log`、`lat2_20_continue_ablation_s1_cuda1.log`、
+`lat0_5_stand_ablation_s1_cuda3.log`。
+GPU2 既有日志为 `dr_lat2_20_stand_cuda2_v2.log`，与 GPU1 对比时选双方
+checkpoint 1000，而非把 GPU2 的 2000 与 GPU1 的 1000 混比。
+PID 仅用于这次启动记录，后续操作前需重新核对进程身份。
