@@ -59,3 +59,10 @@ class GO2AMPMujocoDRLat2_20StandCfg(GO2AMPMujocoDRLat2_20Cfg):
             stand_pose = 1.0
             stand_quiet = 0.25
             stand_feet_contact = 0.5
+
+
+class GO2AMPMujocoDRLat0_5StandCfg(GO2AMPMujocoDRLat0_5Cfg):
+    """Lat0-5 baseline with exactly the same stance rewards as lat2-20."""
+
+    class rewards(GO2AMPMujocoDRLat2_20StandCfg.rewards):
+        pass

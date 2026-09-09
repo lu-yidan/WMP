@@ -1,0 +1,54 @@
+# Stand reward ablation / 站立奖励对照（2026-09-09）
+
+新增 task `go2_amp_mujoco_dr_lat0_5_stand`，launcher profile
+`down_dr_lat0_5_stand`。复用 lat2-20 stand 的完全相同奖励：pose=1、quiet=0.25、
+contact=0.5；保留 lat0-5 的相机 [15,25]、动力学、DR 与延迟 [0,5] ms。
+没有改变现有 task、奖励实现或 resume 行为。源 checkpoint 选 3000，与此前
+两组导出保持一致，而不是自动挑选最新的 4000。
+
+## First paired experiment / 第一组成对实验
+
+在服务器的 WMP 仓库与 wmp conda 环境中，确认 GPU 空闲后执行：
+
+```bash
+WMP_SOURCE_RUN=Sep08_16-45-31_WMP_mujoco_dr_lat0_5_ft \
+WMP_SOURCE_CHECKPOINT=3000 \
+WMP_CAMERA_PROFILE=down_dr_lat0_5_stand \
+WMP_RUN_NAME=WMP_lat0_5_stand_ablation_s1 \
+WMP_FINETUNE_ITERATIONS=1000 WMP_NUM_ENVS=4096 \
+WMP_SEED=1 WMP_SIM_DEVICE=cuda:0 \
+./scripts/train_go2_amp_mujoco_finetune.sh
+```
+
+原奖励继续训练对照：相同命令只改 profile 为 `down_dr_lat0_5`，run name 为
+`WMP_lat0_5_continue_ablation_s1`。不要从新 stand 模型续训作为对照。
+不要将两项任务放到同一张显存不足的 GPU 上；这里没有自动启动服务器训练。
+
+对 2–20 ms 也做同样的一对：source 改为
+`Sep08_20-54-13_WMP_mujoco_dr_lat2_20_ft`，profile 分别为
+`down_dr_lat2_20` / `down_dr_lat2_20_stand`，独立 run name。
+各组先追加 1000 updates，比较同等追加次数；有明确趋势后用 seeds 1/2/3
+复验。两个 latency 源模型训练历史不同，这不是严格的仅延迟因果实验；
+严格隔离延迟需要从同一个父 checkpoint 训练各组。
+
+## Diagnosis / 排查顺序
+
+1. 固定 checkpoint、指令、地形等级、相机和 RSSM 采样设置，多次评估原模型。
+   Isaac 使用 `--terrain_level 8`；零命令站立与 0.6 m/s 越障分开测，
+   不要在靠近障碍时松开 RB。记录完整实际指令，不能只看摇杆位置。
+2. 比较原奖励继续训练 vs stand。若两者都退化，先查 resume/训练分布；
+   若只有 stand 退化，再做奖励消融，而非同时修改相机、延迟和动作尺度。
+3. 下一轮可以仅把 contact 从 0.5 降到 0.1，其他不变（尚未实现此变体）。
+   另外单独检查 `<0.1` 的站立门控、零命令覆盖率，避免和奖励权重一起改。
+
+记录：零指令时 |yaw rate|、关节速度、四足接触率；climb/gap 各至少 10 次
+通过/起跳/落地成功数及失败类型。先固定简单地形再测第 8 级。
+总 reward 不适合直接跨奖励配方排名；训练 episode 的成功率也不替代固定评估。
+
+当前 resume 恢复 actor/critic、world-model 和 PPO optimizer；AMP discriminator
+与 AMP normalizer 的恢复被注释，WM optimizer 默认不恢复。
+所以继续训练对照是必要的，不能把 checkpoint 前后的所有差异归因于 stand。
+本次不改变这些行为。文件名 update 数和内部 iter 分开记录；旧模型 iter 常为 0。
+
+当前 contact 奖励的 last_contacts 在 feet_air_time 中已被更新，一帧过滤实现
+值得独立修正；先保持本次两组奖励一致。没有证据认定 reward clipping 是主因。

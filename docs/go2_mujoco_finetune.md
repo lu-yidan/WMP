@@ -128,9 +128,9 @@ WMP_SIM_DEVICE=cuda:3 WMP_CAMERA_PROFILE=down_dr_lat2_20 WMP_SEED=1 \
 The forward command is sampled uniformly from `[0,0.8]`; 12.5% of raw samples
 fall in `[0,0.1]`. The environment then maps every planar command with norm at
 most `0.2` to exact zero, so approximately 25% of samples become zero-forward
-commands and remain active for the 10-second resampling interval. This is enough
-coverage; the earlier issue was that the existing `stand_still` scale and global
-`dof_vel` scale were both zero, with no missing-foot-contact penalty.
+commands for the 10-second resampling interval. Heading control can still produce
+nonzero yaw: 25% zero-planar samples does not establish full-zero command coverage.
+The existing `stand_still` and global `dof_vel` scales were both zero.
 
 `down_dr_lat2_20_stand` inherits the complete lat2-20 camera/dynamics profile
 and changes only three reward scales. They are gated by the norm of the complete
@@ -143,18 +143,17 @@ and changes only three reward scales. They are gated by the norm of the complete
 | `stand_feet_contact` | `+0.5` | number of feet with filtered vertical contact |
 
 These are positive quality rewards rather than negative costs. The inherited
-task uses `only_positive_rewards=True`; an initial negative-cost version drove
-the zero-command total to the clipping floor (`0`) and therefore could not
-distinguish a mildly unstable stance from a strongly rotating one. Do not resume
-the resulting stand checkpoint; restart this ablation from the original
-lat2-20 `model_3000.pt`.
+task uses `only_positive_rewards=True`; negative totals can be clipped and lose
+distinctions between poor behaviors. The earlier playback aggregate of zero
+does not prove this happened: playback masks accumulated rewards after the first
+termination. Measure per-step pre/post-clip rewards before claiming causality.
+Start controlled reward ablations from the same original checkpoint.
 
 Rejected ablation record (2026-09-09): `Sep09_11-34-44_..._stand_ft/model_1000.pt`
 received an exact `[0,0,0]` Xbox command for 10 simulated seconds, yet reported
 mostly negative/rightward yaw rates (`-0.10` to `-0.38 rad/s`) and frequently
-only 2–3 contacting feet. Its clipped task reward was `0`. This proves the
-observed right turn was not joystick-center drift and is why the negative-cost
-reward version must not be used as a resume source.
+only 2–3 contacting feet. Exact zero commands exclude joystick-center drift in
+that test, but neither prove reward clipping nor identify the cause of rotation.
 
 Resume the accepted lat2-20 checkpoint for a short controlled experiment:
 
@@ -173,10 +172,10 @@ not remove the diagonal stepping cycle, the next isolated experiment should
 mask AMP style reward only for zero-motion commands.
 
 原始 `vx` 落入 `0–0.1 m/s` 的比例为 12.5%，但环境会把 `≤0.2 m/s`
-统一归零，因此实际约 25% 的采样是精确零速，并持续 10 秒。新的 stand
-profile 只增加默认姿态、低关节速度和四足接触三项零命令正向质量奖励。负惩罚
-版本会被 `only_positive_rewards` 截到零，因此应从原 lat2-20 的
-`model_3000.pt` 重新训练，而不是续训 stand-1000；第一轮仍不修改 AMP 权重。
+统一归零，因此约 25% 是零平移指令，但 heading 控制可能仍输出 yaw，
+不能等同于完整零命令占比。stand profile 增加三项正向奖励，门控为
+三维命令范数 `<0.1`。之前仅凭累计 reward=0 判断裁剪原因证据不足。
+对照实验从相同原始 checkpoint 开始，第一轮不修改 AMP 权重。
 
 Always set `WMP_SIM_DEVICE` to a free GPU. The launcher also passes matching
 `--rl_device` / `--wm_device`; otherwise the world model can default to
