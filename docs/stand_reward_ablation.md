@@ -101,3 +101,9 @@ run names: `WMP_lat0_5_stand_no_contact_ablation_s1` / `WMP_lat0_5_stand_quiet_a
 配置对比验证：相对完整 stand 仅上述 reward scales 改变；既有全局奖励
 （例如 dof_error）并未删除，quiet-only 指仅新增站立奖励中的 quiet。
 门控、AMP、相机、延迟与 resume 行为不变。GPU2 的 2–20 ms 站立版保持运行。
+
+启动代码版本 `f7b8874`，GPU0 PID=695117，GPU1 PID=695118。
+实际输出目录（均在 `logs/go2_amp_example/`）：
+`Sep09_22-33-14_WMP_lat0_5_stand_no_contact_ablation_s1`、
+`Sep09_22-33-12_WMP_lat0_5_stand_quiet_ablation_s1`。
+完整奖励对照目录为 `Sep09_22-25-47_WMP_lat0_5_stand_ablation_s1`。
