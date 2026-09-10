@@ -118,6 +118,9 @@ model_3000 续训，GPU0、4096 envs、seed1、追加1000轮。
 实际延迟取值 0/5/10/15/20 ms；因此与源模型相比同时改变 quiet 奖励和
 延迟下限，不是纯奖励消融。日志为
 `logs/finetune_launch/lat0_20_stand_quiet_ablation_s1_cuda0.log`。
+实际启动代码 `2df4d2e`，GPU0 PID=18585，输出目录
+`logs/go2_amp_example/Sep10_15-25-01_WMP_lat0_20_stand_quiet_ablation_s1`。
+已确认加载指定 checkpoint 并完成第 0 轮训练，无启动 OOM/异常。
 
 用户反馈 lat0-5 quiet 在 MuJoCo 表现不错，追加 lat2-20 quiet 对照。
 这里“20 ms”沿用既有随机延迟 [2,20] ms，不是固定 20 ms；sim dt=5 ms
