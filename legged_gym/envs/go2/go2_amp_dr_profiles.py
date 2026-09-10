@@ -82,3 +82,10 @@ class GO2AMPMujocoDRLat0_5StandQuietCfg(GO2AMPMujocoDRLat0_5StandNoContactCfg):
     class rewards(GO2AMPMujocoDRLat0_5StandNoContactCfg.rewards):
         class scales(GO2AMPMujocoDRLat0_5StandNoContactCfg.rewards.scales):
             stand_pose = 0.0
+
+
+class GO2AMPMujocoDRLat2_20StandQuietCfg(GO2AMPMujocoDRLat2_20Cfg):
+    """Lat2-20 dynamics with identical quiet rewards to the lat0-5 ablation."""
+
+    class rewards(GO2AMPMujocoDRLat0_5StandQuietCfg.rewards):
+        pass

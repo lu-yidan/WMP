@@ -107,3 +107,25 @@ run names: `WMP_lat0_5_stand_no_contact_ablation_s1` / `WMP_lat0_5_stand_quiet_a
 `Sep09_22-33-14_WMP_lat0_5_stand_no_contact_ablation_s1`、
 `Sep09_22-33-12_WMP_lat0_5_stand_quiet_ablation_s1`。
 完整奖励对照目录为 `Sep09_22-25-47_WMP_lat0_5_stand_ablation_s1`。
+
+## Lat2-20 quiet follow-up / 20 ms quiet 后续实验（2026-09-10）
+
+用户反馈 lat0-5 quiet 在 MuJoCo 表现不错，追加 lat2-20 quiet 对照。
+这里“20 ms”沿用既有随机延迟 [2,20] ms，不是固定 20 ms；sim dt=5 ms
+时实际离散为 5/10/15/20 ms。仅新增 stand_quiet=0.25，stand_pose/contact=0，
+原有全局奖励保留。相机仍为向下 [15,25] 度，resume 行为不变。
+
+```bash
+WMP_SOURCE_RUN=Sep08_20-54-13_WMP_mujoco_dr_lat2_20_ft \
+WMP_SOURCE_CHECKPOINT=3000 \
+WMP_CAMERA_PROFILE=down_dr_lat2_20_stand_quiet \
+WMP_RUN_NAME=WMP_lat2_20_stand_quiet_ablation_s1 \
+WMP_FINETUNE_ITERATIONS=1000 WMP_NUM_ENVS=4096 \
+WMP_SEED=1 WMP_SIM_DEVICE=cuda:0 \
+./scripts/train_go2_amp_mujoco_finetune.sh
+```
+
+在 gpu4090 的 `/root/workplace/WMP` 启动前确认 GPU0 空闲。
+日志 `logs/finetune_launch/lat2_20_stand_quiet_ablation_s1_cuda0.log`。
+play 使用 task `go2_amp_mujoco_dr_lat2_20_stand_quiet`，与 lat0-5 quiet
+统一比较追加 1000 updates、相同地形等级/速度/采样设置。
