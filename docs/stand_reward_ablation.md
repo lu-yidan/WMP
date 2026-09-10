@@ -110,6 +110,15 @@ run names: `WMP_lat0_5_stand_no_contact_ablation_s1` / `WMP_lat0_5_stand_quiet_a
 
 ## Lat2-20 quiet follow-up / 20 ms quiet 后续实验（2026-09-10）
 
+**启动前用户改为 [0,20] ms。以下 lat2-20 命令仅为原计划，未启动。**
+实际使用 profile `down_dr_lat0_20_stand_quiet`，task
+`go2_amp_mujoco_dr_lat0_20_stand_quiet`，run name
+`WMP_lat0_20_stand_quiet_ablation_s1`。仍从下面指定的 Sep08 lat2-20
+model_3000 续训，GPU0、4096 envs、seed1、追加1000轮。
+实际延迟取值 0/5/10/15/20 ms；因此与源模型相比同时改变 quiet 奖励和
+延迟下限，不是纯奖励消融。日志为
+`logs/finetune_launch/lat0_20_stand_quiet_ablation_s1_cuda0.log`。
+
 用户反馈 lat0-5 quiet 在 MuJoCo 表现不错，追加 lat2-20 quiet 对照。
 这里“20 ms”沿用既有随机延迟 [2,20] ms，不是固定 20 ms；sim dt=5 ms
 时实际离散为 5/10/15/20 ms。仅新增 stand_quiet=0.25，stand_pose/contact=0，

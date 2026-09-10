@@ -47,6 +47,10 @@ case "${CAMERA_PROFILE}" in
     TASK="go2_amp_mujoco_dr_lat0_5_stand_quiet"
     DEFAULT_RUN_NAME="WMP_lat0_5_stand_quiet_ablation_s1"
     ;;
+  down_dr_lat0_20_stand_quiet)
+    TASK="go2_amp_mujoco_dr_lat0_20_stand_quiet"
+    DEFAULT_RUN_NAME="WMP_lat0_20_stand_quiet_ablation_s1"
+    ;;
   down_dr_lat2_20_stand_quiet)
     TASK="go2_amp_mujoco_dr_lat2_20_stand_quiet"
     DEFAULT_RUN_NAME="WMP_lat2_20_stand_quiet_ablation_s1"
@@ -57,7 +61,7 @@ case "${CAMERA_PROFILE}" in
     DEFAULT_RUN_NAME="WMP_mujoco_dr_lat2_20_stand_ft"
     ;;
   *)
-    echo "Unknown WMP_CAMERA_PROFILE=${CAMERA_PROFILE}; expected legacy, down, down_dr_lat0_5, down_dr_lat2_20, down_dr_lat0_5_stand, down_dr_lat0_5_stand_no_contact, down_dr_lat0_5_stand_quiet, down_dr_lat2_20_stand_quiet, or down_dr_lat2_20_stand." >&2
+    echo "Unknown WMP_CAMERA_PROFILE=${CAMERA_PROFILE}; expected legacy, down, down_dr_lat0_5, down_dr_lat2_20, down_dr_lat0_5_stand, down_dr_lat0_5_stand_no_contact, down_dr_lat0_5_stand_quiet, down_dr_lat0_20_stand_quiet, down_dr_lat2_20_stand_quiet, or down_dr_lat2_20_stand." >&2
     exit 2
     ;;
 esac

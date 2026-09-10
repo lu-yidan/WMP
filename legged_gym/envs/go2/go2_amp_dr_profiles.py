@@ -89,3 +89,10 @@ class GO2AMPMujocoDRLat2_20StandQuietCfg(GO2AMPMujocoDRLat2_20Cfg):
 
     class rewards(GO2AMPMujocoDRLat0_5StandQuietCfg.rewards):
         pass
+
+
+class GO2AMPMujocoDRLat0_20StandQuietCfg(GO2AMPMujocoDRLat2_20StandQuietCfg):
+    """Quiet stance with randomized latency 0/5/10/15/20 ms at dt=5 ms."""
+
+    class domain_rand(GO2AMPMujocoDRLat2_20StandQuietCfg.domain_rand):
+        latency_range = [0.0, 0.020]
