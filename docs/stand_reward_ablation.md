@@ -121,6 +121,12 @@ model_3000 续训，GPU0、4096 envs、seed1、追加1000轮。
 实际启动代码 `2df4d2e`，GPU0 PID=18585，输出目录
 `logs/go2_amp_example/Sep10_15-25-01_WMP_lat0_20_stand_quiet_ablation_s1`。
 已确认加载指定 checkpoint 并完成第 0 轮训练，无启动 OOM/异常。
+用户随后将目标提高到 5000 updates。原 PID18585 仅完成约 3 轮，已 SIGTERM
+停止并保留原日志/初始 checkpoint；从同一 Sep08 model_3000 重新开始，不从
+model_0 续训，以保留一致的初始化路径。新 run name 为
+`WMP_lat0_20_stand_quiet_5000_s1`，日志为
+`logs/finetune_launch/lat0_20_stand_quiet_5000_s1_cuda0.log`。
+环境数4096、seed1、GPU0、[0,20]ms、quiet=0.25 均不变。
 
 用户反馈 lat0-5 quiet 在 MuJoCo 表现不错，追加 lat2-20 quiet 对照。
 这里“20 ms”沿用既有随机延迟 [2,20] ms，不是固定 20 ms；sim dt=5 ms
